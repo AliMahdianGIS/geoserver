@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Layer Comparison Tool with Modal</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Load Calcite components from CDN -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/3.2.1/calcite.esm.js"></script>
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.33/"></script>
+
+    <!-- Load Map components from CDN-->
+    <script type="module" src="https://js.arcgis.com/4.33/map-components/"></script>
+
+    <style>
+      .modal-map {
+        height: 80vh;
+        width: 100%;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <!-- Main Content -->
+    <div class="text-center">
+      <h1 class="text-4xl font-bold text-gray-800 mb-8">Layer Comparison Tool</h1>
+      <p class="text-lg text-gray-600 mb-8">Click the button below to compare infrared and near-infrared satellite imagery</p>
+      
+      <!-- Open Modal Button -->
+      <button 
+        id="openModalBtn" 
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+        Compare Layers
+      </button>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-full overflow-hidden">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-bold text-gray-800">Layer Comparison - Kilauea Satellite Imagery</h2>
+          <button 
+            id="closeModalBtn" 
+            class="text-gray-400 hover:text-gray-600 transition duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6">
+          <div class="mb-4">
+            <p class="text-gray-600">Use the swipe tool to compare Shortwave Infrared (left) and Near Infrared (right) imagery of Kilauea volcano.</p>
+          </div>
+          
+          <!-- Map Container -->
+          <div class="calcite-mode-dark modal-map rounded-lg overflow-hidden">
+            <arcgis-map id="mapView" zoom="15" center="-154.88, 19.46" class="w-full h-full">
+              <arcgis-zoom position="top-left"></arcgis-zoom>
+              <arcgis-swipe swipe-position="50"></arcgis-swipe>
+              <arcgis-expand position="top-right">
+                <arcgis-layer-list></arcgis-layer-list>
+              </arcgis-expand>
+            </arcgis-map>
+          </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="flex justify-end p-6 border-t border-gray-200">
+          <button 
+            id="closeModalBtn2" 
+            class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Modal functionality
+      const openModalBtn = document.getElementById('openModalBtn');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const closeModalBtn2 = document.getElementById('closeModalBtn2');
+      const modal = document.getElementById('modal');
+      let mapInitialized = false;
+
+      // Open modal
+      openModalBtn.addEventListener('click', async () => {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Initialize map only once when modal is first opened
+        if (!mapInitialized) {
+          await initializeMap();
+          mapInitialized = true;
+        }
+      });
+
+      // Close modal functions
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      };
+
+      closeModalBtn.addEventListener('click', closeModal);
+      closeModalBtn2.addEventListener('click', closeModal);
+
+      // Close modal when clicking outside
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close modal with Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+
+      // Initialize the map with swipe functionality
+      async function initializeMap() {
+        try {
+          const [Map, TileLayer] = await $arcgis.import([
+            "@arcgis/core/Map.js",
+            "@arcgis/core/layers/TileLayer.js",
+          ]);
+
+          const arcgisSwipe = document.querySelector("arcgis-swipe");
+          const viewElement = document.querySelector("arcgis-map");
+          
+          const infrared = new TileLayer({
+            url: "https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WV03_Kilauea_20180519_ShortwaveInfrared/MapServer",
+            maxScale: 3000,
+            title: "Shortwave Infrared"
+          });
+          
+          const nearInfrared = new TileLayer({
+            url: "https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WV03_Kilauea_20180519_NearInfrared/MapServer",
+            maxScale: 3000,
+            title: "Near Infrared"
+          });
+          
+          // Create the map with layers
+          viewElement.map = new Map({
+            basemap: "satellite",
+            layers: [infrared, nearInfrared],
+          });
+          
+          // Wait for swipe to be ready, then add the leading and trailing layers
+          arcgisSwipe.addEventListener("arcgisPropertyChange", (e) => {
+            if (e.detail.name === "state" && arcgisSwipe.state === "ready") {
+              arcgisSwipe.leadingLayers.add(infrared);
+              arcgisSwipe.trailingLayers.add(nearInfrared);
+            }
+          });
+        } catch (error) {
+          console.error("Error initializing map:", error);
+        }
+      }
+    </script>
+  </body>
+</html>
