@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-    <title>Layer Comparison Tool with Modal</title>
+    <title>Cambridge Permeable Surface Layer - WMTS Viewer</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,152 +19,200 @@
     <script type="module" src="https://js.arcgis.com/4.33/map-components/"></script>
 
     <style>
-      .modal-map {
+      .map-container {
         height: 80vh;
+        width: 100%;
+      }
+      .full-map {
+        height: 100vh;
         width: 100%;
       }
     </style>
   </head>
 
-  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <!-- Main Content -->
-    <div class="text-center">
-      <h1 class="text-4xl font-bold text-gray-800 mb-8">Layer Comparison Tool</h1>
-      <p class="text-lg text-gray-600 mb-8">Click the button below to compare infrared and near-infrared satellite imagery</p>
-      
-      <!-- Open Modal Button -->
-      <button 
-        id="openModalBtn" 
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
-        Compare Layers
-      </button>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-md p-4">
+      <div class="container mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800">Cambridge, Canada - Permeable Surface Layer</h1>
+        <p class="text-gray-600 mt-2">WMTS layer from GeoServer displaying permeable surface data</p>
+      </div>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-full overflow-hidden">
-        <!-- Modal Header -->
-        <div class="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 class="text-2xl font-bold text-gray-800">Layer Comparison - Kilauea Satellite Imagery</h2>
-          <button 
-            id="closeModalBtn" 
-            class="text-gray-400 hover:text-gray-600 transition duration-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        
-        <!-- Modal Body -->
-        <div class="p-6">
-          <div class="mb-4">
-            <p class="text-gray-600">Use the swipe tool to compare Shortwave Infrared (left) and Near Infrared (right) imagery of Kilauea volcano.</p>
+    <!-- Map Container -->
+    <div class="p-4">
+      <div class="container mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+          <!-- Map Controls Header -->
+          <div class="bg-gray-50 p-4 border-b">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-semibold text-gray-700">Map View</h2>
+              <div class="flex space-x-2">
+                <button 
+                  id="fullscreenBtn" 
+                  class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                  Toggle Fullscreen
+                </button>
+                <button 
+                  id="layerToggleBtn" 
+                  class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                  Toggle Layer
+                </button>
+              </div>
+            </div>
           </div>
           
-          <!-- Map Container -->
-          <div class="calcite-mode-dark modal-map rounded-lg overflow-hidden">
-            <arcgis-map id="mapView" zoom="15" center="-154.88, 19.46" class="w-full h-full">
+          <!-- Map -->
+          <div id="mapContainer" class="calcite-mode-dark map-container">
+            <arcgis-map id="mapView" zoom="12" center="-80.3, 43.3" class="w-full h-full">
               <arcgis-zoom position="top-left"></arcgis-zoom>
-              <arcgis-swipe swipe-position="50"></arcgis-swipe>
               <arcgis-expand position="top-right">
                 <arcgis-layer-list></arcgis-layer-list>
+              </arcgis-expand>
+              <arcgis-expand position="bottom-left">
+                <arcgis-legend></arcgis-legend>
               </arcgis-expand>
             </arcgis-map>
           </div>
         </div>
-        
-        <!-- Modal Footer -->
-        <div class="flex justify-end p-6 border-t border-gray-200">
-          <button 
-            id="closeModalBtn2" 
-            class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-            Close
-          </button>
+      </div>
+    </div>
+
+    <!-- Layer Information Panel -->
+    <div class="p-4">
+      <div class="container mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h3 class="text-xl font-semibold text-gray-700 mb-4">Layer Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-medium text-gray-600">Layer Name:</h4>
+              <p class="text-gray-800">rdt:permeable</p>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-600">Format:</h4>
+              <p class="text-gray-800">PNG</p>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-600">Coordinate System:</h4>
+              <p class="text-gray-800">EPSG:4326 (WGS84)</p>
+            </div>
+            <div>
+              <h4 class="font-medium text-gray-600">Service Type:</h4>
+              <p class="text-gray-800">WMTS</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <h4 class="font-medium text-gray-600">GeoServer URL:</h4>
+            <p class="text-gray-800 break-all">http://localhost:8081/DigitalTwin/rdt/gwc/service/wmts</p>
+          </div>
         </div>
       </div>
     </div>
 
     <script type="module">
-      // Modal functionality
-      const openModalBtn = document.getElementById('openModalBtn');
-      const closeModalBtn = document.getElementById('closeModalBtn');
-      const closeModalBtn2 = document.getElementById('closeModalBtn2');
-      const modal = document.getElementById('modal');
       let mapInitialized = false;
+      let wmtsLayer = null;
 
-      // Open modal
-      openModalBtn.addEventListener('click', async () => {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // Initialize map only once when modal is first opened
-        if (!mapInitialized) {
-          await initializeMap();
-          mapInitialized = true;
+      // Initialize the map when page loads
+      document.addEventListener('DOMContentLoaded', async () => {
+        await initializeMap();
+        mapInitialized = true;
+      });
+
+      // Fullscreen toggle
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const mapContainer = document.getElementById('mapContainer');
+      let isFullscreen = false;
+
+      fullscreenBtn.addEventListener('click', () => {
+        if (!isFullscreen) {
+          mapContainer.classList.remove('map-container');
+          mapContainer.classList.add('full-map', 'fixed', 'top-0', 'left-0', 'z-50');
+          fullscreenBtn.textContent = 'Exit Fullscreen';
+          isFullscreen = true;
+        } else {
+          mapContainer.classList.remove('full-map', 'fixed', 'top-0', 'left-0', 'z-50');
+          mapContainer.classList.add('map-container');
+          fullscreenBtn.textContent = 'Toggle Fullscreen';
+          isFullscreen = false;
         }
       });
 
-      // Close modal functions
-      const closeModal = () => {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-      };
-
-      closeModalBtn.addEventListener('click', closeModal);
-      closeModalBtn2.addEventListener('click', closeModal);
-
-      // Close modal when clicking outside
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          closeModal();
+      // Layer toggle
+      const layerToggleBtn = document.getElementById('layerToggleBtn');
+      layerToggleBtn.addEventListener('click', () => {
+        if (wmtsLayer) {
+          wmtsLayer.visible = !wmtsLayer.visible;
+          layerToggleBtn.textContent = wmtsLayer.visible ? 'Hide Layer' : 'Show Layer';
         }
       });
 
-      // Close modal with Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-          closeModal();
-        }
-      });
-
-      // Initialize the map with swipe functionality
+      // Initialize the map with WMTS layer
       async function initializeMap() {
         try {
-          const [Map, TileLayer] = await $arcgis.import([
+          const [Map, WMTSLayer, TileInfo, Point, SpatialReference] = await $arcgis.import([
             "@arcgis/core/Map.js",
-            "@arcgis/core/layers/TileLayer.js",
+            "@arcgis/core/layers/WMTSLayer.js",
+            "@arcgis/core/layers/support/TileInfo.js",
+            "@arcgis/core/geometry/Point.js",
+            "@arcgis/core/geometry/SpatialReference.js"
           ]);
 
-          const arcgisSwipe = document.querySelector("arcgis-swipe");
           const viewElement = document.querySelector("arcgis-map");
           
-          const infrared = new TileLayer({
-            url: "https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WV03_Kilauea_20180519_ShortwaveInfrared/MapServer",
-            maxScale: 3000,
-            title: "Shortwave Infrared"
+          // Create WMTS layer
+          wmtsLayer = new WMTSLayer({
+            url: "http://localhost:8081/DigitalTwin/rdt/gwc/service/wmts",
+            activeLayer: {
+              id: "rdt:permeable"
+            },
+            serviceMode: "RESTful",
+            title: "Cambridge Permeable Surfaces",
+            opacity: 0.8
           });
-          
-          const nearInfrared = new TileLayer({
-            url: "https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/WV03_Kilauea_20180519_NearInfrared/MapServer",
-            maxScale: 3000,
-            title: "Near Infrared"
-          });
-          
-          // Create the map with layers
+
+          // Create the map
           viewElement.map = new Map({
-            basemap: "satellite",
-            layers: [infrared, nearInfrared],
+            basemap: "streets-navigation-vector",
+            layers: [wmtsLayer]
+          });
+
+          // Set the view to Cambridge, Canada
+          await viewElement.when();
+          const view = viewElement.view;
+          
+          // Center on Cambridge, Canada
+          view.center = new Point({
+            longitude: -80.3163,
+            latitude: 43.3616,
+            spatialReference: SpatialReference.WGS84
           });
           
-          // Wait for swipe to be ready, then add the leading and trailing layers
-          arcgisSwipe.addEventListener("arcgisPropertyChange", (e) => {
-            if (e.detail.name === "state" && arcgisSwipe.state === "ready") {
-              arcgisSwipe.leadingLayers.add(infrared);
-              arcgisSwipe.trailingLayers.add(nearInfrared);
-            }
-          });
+          view.zoom = 12;
+
+          console.log("Map initialized successfully with WMTS layer");
+          console.log("WMTS Layer:", wmtsLayer);
+
         } catch (error) {
           console.error("Error initializing map:", error);
+          
+          // Show error message to user
+          const mapContainer = document.getElementById('mapContainer');
+          mapContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-red-50">
+              <div class="text-center p-8">
+                <h3 class="text-xl font-semibold text-red-700 mb-4">Error Loading Map</h3>
+                <p class="text-red-600 mb-4">Failed to load the WMTS layer. Please check:</p>
+                <ul class="text-left text-red-600 space-y-2">
+                  <li>• GeoServer is running on localhost:8081</li>
+                  <li>• The layer 'rdt:permeable' exists</li>
+                  <li>• WMTS service is enabled</li>
+                  <li>• CORS is properly configured</li>
+                </ul>
+                <p class="text-sm text-gray-600 mt-4">Error: ${error.message}</p>
+              </div>
+            </div>
+          `;
         }
       }
     </script>
